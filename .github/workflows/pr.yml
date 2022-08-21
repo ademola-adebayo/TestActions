@@ -47,7 +47,7 @@ jobs:
       - name: Get into the system-tests folder and run the test
         run: |
           cd ./system-tests
-          run: ls -R
+          ls -R
           echo "test running..."
 
 
