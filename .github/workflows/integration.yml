@@ -21,7 +21,7 @@ jobs:
         id: check
         with:
           # prefix_only: true
-          trigger: '@ci'
+          trigger: 'ci'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
