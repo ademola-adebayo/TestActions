@@ -1,6 +1,6 @@
 name: PR
 on:
-  # pull_request:
+  pull_request:
   workflow_dispatch:
     
 jobs:
@@ -33,6 +33,22 @@ jobs:
       #   with:
       #     name: screenshots
       #     path: cypress/screenshots
+  system-test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout syestem tests repo 
+        uses: actions/checkout@v3
+        with:
+          repository: 'ademola-adebayo/cicd-poc'
+          path: './system-tests'
+          # token: ''
+
+      - name: Get into the system-tests folder and run the test
+        run: |
+          cd ./system-tests
+          echo "test running..."
+
 
   code-quality:
     runs-on: ubuntu-latest
