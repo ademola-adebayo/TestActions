@@ -17,19 +17,20 @@ jobs:
         run: yarn
   e2e-tests:
     runs-on:
+    needs: [build]
     steps:
       - name: Build and start application
         run: echo "This is where you boot your application for testing"
 
       - name: Run end-to-end Cypress tests
         uses: cypress-io/github-action@v2
-        
+
       - name: Archive test screenshots
-          if: failure()
-          uses: actions/upload-artifact@v2
-          with:
-            name: screenshots
-            path: cypress/screenshots
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshots
+          path: cypress/screenshots
 
   code-quality:
     runs-on: ubuntu-latest
