@@ -77,6 +77,43 @@ jobs:
         run: |
           echo ::set-output name=sha::$( curl -u "u:${{github.token}}" https://api.github.com/repos/${{steps.pr_data.outputs.repo_name}}/git/ref/heads/${{steps.pr_data.outputs.branch}} | jq .object.sha | tr -d '"' )
 
+      # print out success or failure comment
+      - name: Create success comment
+        if:  steps.check.outputs.triggered == 'true' &&  success()  
+        env:
+          URL: ${{ github.event.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl \
+            -X POST \
+            $URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{ "body": ":v: [finish ci integration job successfully]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'    
+        
+      - name: Create fail comment
+        if:  steps.check.outputs.triggered == 'true' && failure()
+        env:
+          URL: ${{ github.event.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl \
+            -X POST \
+            $URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{ "body": ":facepalm: [ci integration job failed]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'
+      
+      - name: Publish Test Report
+        if: steps.check.outputs.triggered == 'true' && (failure() || success())
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ${{ steps.debug.outputs.sha }}
+          check_name: integration_test_results         
+
+
+
 
 
 
