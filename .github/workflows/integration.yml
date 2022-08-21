@@ -19,7 +19,7 @@ jobs:
         uses: khan/pull-request-comment-trigger@master
         id: check
         with:
-          prefix_only: true
+          # prefix_only: true
           trigger: '@ci@'
           reaction: rocket
         env:
