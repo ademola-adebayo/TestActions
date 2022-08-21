@@ -1,6 +1,8 @@
 name: Integration
 
 on:
+  pull_request:
+    types: [opened]  
   issue_comment:
     types: [created]
 
@@ -15,11 +17,11 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
       - name: Check Comment
-        uses: khan/pull-request-comment-trigger@master
+        uses: khan/pull-request-comment-trigger@v1.1.0
         id: check
         with:
           # prefix_only: true
-          trigger: 'ci'
+          trigger: '@ci'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
