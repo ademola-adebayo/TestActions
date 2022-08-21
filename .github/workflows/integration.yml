@@ -26,8 +26,8 @@ jobs:
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         
-      - name: Create Comment
-        if: steps.check.outputs.triggered == 'true' 
+      - name: Create comment
+        if: steps.check.outputs.triggered == 'true'
         env:
           URL: ${{ github.event.issue.comments_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +38,9 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: token $GITHUB_TOKEN" \
             --data '{ "body": ":test_tube: [starting ci integration job]( https://github.com/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"')" }'
-      
+            
+      - run: 'echo Found it!'
+        if: steps.check.outputs.triggered == 'true'
       # The next steps will pull the PR branch ,
       # it is needed because the build isn't running in PR context
       - name: Github API Request
