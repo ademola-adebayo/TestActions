@@ -89,6 +89,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     environment:
+      name: Development
       url: "${{ needs.build.outputs.fav-animal }}"
     steps:
       - name: verify
