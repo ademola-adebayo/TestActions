@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs: 
       fav-animal: tiger 
-      fav-number: "${{ steps.abc.outputs.FAV_NUMBER }}""
+      fav-number: "${{ steps.abc.outputs.FAV_NUMBER }}"
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
