@@ -88,7 +88,8 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [build]
     runs-on: ubuntu-latest
-    
+    environment:
+      url: "${{ needs.build.outputs.fav-animal }}"
     steps:
       - name: verify
         run: |
