@@ -1,0 +1,99 @@
+name: PR Opened
+
+on:
+  pull_request:
+  workflow_dispatch:
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs: 
+      fav-animal: tiger 
+      fav-number: "${{ steps.abc.outputs.FAV_NUMBER }}"
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install package.json dependencies with Yarn
+        run: yarn
+
+      - name: Do Work
+        id: abc
+        run: |
+          echo '::set-output name=FAV_NUMBER::3'
+          echo '::set-output name=FAV_COLOR::blue'
+
+      - name: Read output 
+        run: |
+          echo "${{ steps.abc.outputs.FAV_NUMBER}}"
+          echo "${{ steps.abc.outputs.FAV_COLOR}}"
+  
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Build and start application
+        run: echo "This is where you boot your application for testing"
+
+      # - name: Run end-to-end Cypress tests
+      #   uses: cypress-io/github-action@v2
+
+      # - name: Archive test screenshots
+      #   if: failure()
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: screenshots
+      #     path: cypress/screenshots
+  
+  system-test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout syestem tests repo 
+        uses: actions/checkout@v3
+        with:
+          repository: 'ademola-adebayo/cicd-poc'
+          path: './system-tests'
+          # token: ''
+
+      - name: Get into the system-tests folder and run the test
+        run: |
+          cd ./system-tests
+          ls -R
+          echo "test running..."
+
+  code-quality:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: check formating with prettier
+        run: echo "Formatting going on ...."
+
+      - name: Lint with ESLint
+        run: echo "Linting going on..."
+
+      - name: Set name output
+        id: name
+        run: |
+          USER_INPUT=Demola
+          echo "::set-output name=value::${USER_INPUT:-"Demola"}"         
+
+  display:
+    name: Display deployment 
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: Development
+      url: "${{ needs.build.outputs.fav-animal }}"
+    steps:
+      - name: verify
+        run: |
+          echo "${{needs.build.outputs.fav-animal}}"
+          echo "${{needs.build.outputs.fav-number}}" 
+

@@ -1,0 +1,112 @@
+name: Integration Test
+
+on:
+  pull_request:
+    types: [opened]  
+  issue_comment:
+    types: [created]
+
+jobs:
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Github context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Check Comment
+        uses: khan/pull-request-comment-trigger@v1.1.0
+        id: check
+        with:
+          # prefix_only: true
+          trigger: 'ci'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+        
+      - name: Create comment
+        if: steps.check.outputs.triggered == 'true'
+        env:
+          URL: ${{ github.event.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl \
+            -X POST \
+            $URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{ "body": ":test_tube: [starting ci integration job]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'
+
+      
+      # The next steps will pull the PR branch ,
+      # it is needed because the build isn't running in PR context
+      - name: Github API Request
+        if: steps.check.outputs.triggered == 'true'
+        id: request
+        uses: octokit/request-action@v2.0.0
+        with:
+          route: ${{ github.event.pull_request.url }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get PR informations
+        if: steps.check.outputs.triggered == 'true'
+        id: pr_data
+        run: |
+          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
+          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).head.repo.full_name }}"
+          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).head.repo.clone_url }}"
+          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).head.repo.ssh_url }}"
+
+      - name: Checkout PR Branch
+        if: steps.check.outputs.triggered == 'true'
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ fromJson(steps.request.outputs.data).head.repo.full_name }}
+          ref: ${{ steps.pr_data.outputs.branch }}
+
+      # add the checked commit revision to the step output, 
+      # We will need in next steps.
+      - name: debug
+        if: steps.check.outputs.triggered == 'true'
+        id: debug 
+        run: |
+          echo ::set-output name=sha::$( curl -u "u:${{github.token}}" https://api.github.com/repos/${{steps.pr_data.outputs.repo_name}}/git/ref/heads/${{steps.pr_data.outputs.branch}} | jq .object.sha | tr -d '"' )
+
+      # print out success or failure comment
+      - name: Create success comment
+        if:  steps.check.outputs.triggered == 'true' &&  success()  
+        env:
+          URL: ${{ github.event.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl \
+            -X POST \
+            $URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{ "body": ":v: [finish ci integration job successfully]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'    
+        
+      - name: Create fail comment
+        if:  steps.check.outputs.triggered == 'true' && failure()
+        env:
+          URL: ${{ github.event.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl \
+            -X POST \
+            $URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{ "body": ":facepalm: [ci integration job failed]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'
+      
+        
+
+
+
+
+
+      
