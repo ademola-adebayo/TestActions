@@ -1,4 +1,5 @@
 name: PR
+
 on:
   pull_request:
   workflow_dispatch:
@@ -6,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs: 
+      fav-animal: tiger 
+      fav-number:${{steps.abc.outputs.FAV_NUMBER}}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
@@ -17,6 +21,18 @@ jobs:
 
       - name: Install package.json dependencies with Yarn
         run: yarn
+
+      - name: Do Work
+        id: abc
+        run: |
+          echo '::set-output name=FAV_NUMBER::3'
+          echo '::set-output name=FAV_COLOR::blue'
+
+      - name: Read output 
+        run: |
+          echo "${{ steps.abc.outputs.FAV_NUMBER}}"
+          echo "${{ steps.abc.outputs.FAV_COLOR}}"
+  
   e2e-tests:
     runs-on: ubuntu-latest
     needs: [build]
@@ -33,6 +49,7 @@ jobs:
       #   with:
       #     name: screenshots
       #     path: cypress/screenshots
+  
   system-test:
     runs-on: ubuntu-latest
     needs: [build]
@@ -50,7 +67,6 @@ jobs:
           ls -R
           echo "test running..."
 
-
   code-quality:
     runs-on: ubuntu-latest
     needs: [build]
@@ -60,3 +76,23 @@ jobs:
 
       - name: Lint with ESLint
         run: echo "Linting going on..."
+
+      - name: Set name output
+        id: name
+        run: |
+          USER_INPUT=Demola
+          echo "::set-output name=value::${USER_INPUT:-"Demola"}"         
+
+  display:
+    name: Display deployment 
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      url: "${{needs.build.outputs.fav-animal}}"
+    steps:
+      - name: verify
+        run: |
+          echo "${{needs.build.outputs.fav-animal}}"
+          echo "${{needs.build.outputs.fav-number}}" 
+

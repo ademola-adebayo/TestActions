@@ -1,4 +1,4 @@
-name: Integration
+name: Integration Test
 
 on:
   pull_request:
@@ -39,8 +39,7 @@ jobs:
             -H "Authorization: token $GITHUB_TOKEN" \
             --data '{ "body": ":test_tube: [starting ci integration job]( https://github.com/'${{ github.repository }}'/actions/runs/'${{ github.run_id }}')" }'
 
-      - run: 'echo Found it!'
-        if: steps.check.outputs.triggered == 'true'
+      
       # The next steps will pull the PR branch ,
       # it is needed because the build isn't running in PR context
       - name: Github API Request
